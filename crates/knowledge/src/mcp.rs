@@ -76,13 +76,14 @@ pub fn checkpoint() -> Result<()> {
 pub(crate) fn observe_connection(connection: &rusqlite::Connection) {
     CURRENT.with(|current| {
         if let Some(operation) = current.borrow().as_ref()
-            && let Ok(mut connections) = operation.connections.lock() {
-                connections.push(connection.get_interrupt_handle());
-                // Close the race with cancellation immediately before registration.
-                if operation.stopped.load(Ordering::Acquire) != 0 {
-                    connection.get_interrupt_handle().interrupt();
-                }
+            && let Ok(mut connections) = operation.connections.lock()
+        {
+            connections.push(connection.get_interrupt_handle());
+            // Close the race with cancellation immediately before registration.
+            if operation.stopped.load(Ordering::Acquire) != 0 {
+                connection.get_interrupt_handle().interrupt();
             }
+        }
     });
 }
 struct WorkerScope(Option<Arc<Operation>>);

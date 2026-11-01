@@ -4,6 +4,7 @@ version = "0.0.1"
 edition = "2024"
 rust-version = "1.98"
 description = "Restore drills, fixture oracles and backend verification (P-BAILLIFF)"
+license-file = "LICENSE"
 publish = false
 
 [dependencies]

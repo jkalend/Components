@@ -133,7 +133,7 @@ struct Evidence {
     os: &'static str,
     arch: &'static str,
     started_unix_seconds: u64,
-    clock_quality: &'static str,
+    clock_quality: String,
     verification_scope: &'static str,
     command_timeout_seconds: u64,
     output_limit_bytes_per_stream: u64,
@@ -208,7 +208,7 @@ fn base_evidence(kind: Kind, scope: &'static str, inputs: &EvidenceInputs) -> Ev
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs(),
-        clock_quality: "unmeasured; wall clock is informational only",
+        clock_quality: "unmeasured; wall clock is informational only".into(),
         verification_scope: match kind {
             Kind::Restic => "repository",
             Kind::Kopia => "snapshot",
@@ -225,6 +225,32 @@ fn base_evidence(kind: Kind, scope: &'static str, inputs: &EvidenceInputs) -> Ev
     }
 }
 
+fn validate_profile(selected: &Profile) -> Result<()> {
+    ensure!(
+        selected.schema_version == 1
+            && matches!(selected.classification.as_str(), "smoke" | "scored")
+            && selected.os == std::env::consts::OS
+            && selected.architecture == std::env::consts::ARCH
+            && !selected.profile_id.is_empty()
+            && selected.revision > 0,
+        "profile version/platform/classification mismatch"
+    );
+    if selected.classification == "scored" {
+        ensure!(
+            selected.missing_fields.is_empty(),
+            "scored profile has missing fields"
+        );
+        ensure!(
+            selected
+                .environment
+                .get("clock_probe")
+                .is_some_and(|value| !value.is_empty() && value != "unmeasured"),
+            "scored profile requires an observed clock_probe"
+        );
+    }
+    Ok(())
+}
+
 fn setup(runner: &mut Runner, profile: Option<&Path>, inputs: &EvidenceInputs) -> Result<()> {
     runner.phase("profile");
     if let Some(profile) = profile {
@@ -232,15 +258,16 @@ fn setup(runner: &mut Runner, profile: Option<&Path>, inputs: &EvidenceInputs) -
         File::open(profile)?.take(65537).read_to_end(&mut bytes)?;
         ensure!(bytes.len() <= 65536, "profile too large");
         let selected: Profile = serde_json::from_slice(&bytes)?;
-        ensure!(
-            selected.schema_version == 1
-                && selected.classification == "smoke"
-                && selected.os == std::env::consts::OS
-                && selected.architecture == std::env::consts::ARCH
-                && !selected.profile_id.is_empty()
-                && selected.revision > 0,
-            "profile version/platform/classification mismatch"
-        );
+        validate_profile(&selected)?;
+        if selected.classification == "scored" {
+            runner
+                .evidence
+                .untested_cases
+                .retain(|case| *case != "scored Windows11/Ubuntu24 profiles");
+            if let Some(probe) = selected.environment.get("clock_probe") {
+                runner.evidence.clock_quality = format!("profile-declared: {probe}");
+            }
+        }
         runner.evidence.profile_sha256 = Some(pins::hash_bytes(&bytes));
         runner.evidence.profile = Some(selected);
     }
@@ -1701,6 +1728,32 @@ mod tests {
             backend_lock_sha256: pins::digest(&bytes),
             source_inputs: Default::default(),
         }
+    }
+
+    fn test_profile(classification: &str, missing: &[&str], clock: &str) -> Profile {
+        Profile {
+            schema_version: 1,
+            profile_id: "test-profile".into(),
+            revision: 1,
+            classification: classification.into(),
+            os: std::env::consts::OS.into(),
+            architecture: std::env::consts::ARCH.into(),
+            environment: [("clock_probe".to_owned(), clock.to_owned())]
+                .into_iter()
+                .collect(),
+            missing_fields: missing.iter().map(|field| (*field).to_owned()).collect(),
+        }
+    }
+
+    #[test]
+    fn scored_profiles_require_complete_observed_fields() {
+        assert!(validate_profile(&test_profile("smoke", &["pending"], "unmeasured")).is_ok());
+        assert!(
+            validate_profile(&test_profile("scored", &["pending"], "ntp offset 2 ms")).is_err()
+        );
+        assert!(validate_profile(&test_profile("scored", &[], "unmeasured")).is_err());
+        assert!(validate_profile(&test_profile("scored", &[], "ntp offset 2 ms")).is_ok());
+        assert!(validate_profile(&test_profile("other", &[], "ntp offset 2 ms")).is_err());
     }
 
     #[test]
