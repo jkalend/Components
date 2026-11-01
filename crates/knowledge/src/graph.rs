@@ -45,11 +45,10 @@ impl<'a> IdentityIndex<'a> {
         if let Some(doc) = self.keys.get(target) {
             return vec![*doc];
         }
-        if let Some((root, path)) = target.split_once(':') {
-            if let Some(doc) = self.paths.get(&(root, path)) {
+        if let Some((root, path)) = target.split_once(':')
+            && let Some(doc) = self.paths.get(&(root, path)) {
                 return vec![*doc];
             }
-        }
         if let Some(docs) = self.ids.get(target) {
             return docs.clone();
         }

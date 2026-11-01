@@ -1,6 +1,6 @@
 # Components
 
-Shared libraries and CLIs for the project family: **one repository, one package per component**. Governed by proposed [D-0012](../project-planning/decisions/0012-component-repositories.md), which amends [D-0005](../project-planning/decisions/0005-repository-layout.md). Working conventions are in [AGENTS.md](AGENTS.md).
+Shared libraries and CLIs for the project family: **one repository, one package per component**. Governed by accepted [D-0012](../project-planning/decisions/0012-component-repositories.md), which amends [D-0005](../project-planning/decisions/0005-repository-layout.md). Working conventions are in [AGENTS.md](AGENTS.md).
 
 Every component has a fixed directory under `crates/`. Two are buildable today: `bailiff` (extracted from PeerVault's R0 harness) and `knowledge` (extracted from Scribe's engine); the remaining directories hold a README pointing at their spec and no manifest. This is a Git repository with a Cargo workspace; `cargo test` runs the component tests.
 

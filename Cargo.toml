@@ -3,3 +3,7 @@ resolver = "3"
 # Members are added when a package becomes buildable (D-0012 rule 5).
 # Placeholder directories under crates/ are intentionally not members.
 members = ["crates/bailiff", "crates/knowledge"]
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

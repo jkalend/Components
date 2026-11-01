@@ -308,11 +308,8 @@ fn validate_hits(config: &Config, hits: &[Hit]) -> Result<()> {
     for hit in hits {
         crate::mcp::checkpoint()?;
         let key = (&hit.root_key, &hit.path);
-        if !sources.contains_key(&key) {
-            sources.insert(
-                key,
-                read_source(config, &hit.root_key, &hit.path, &hit.source_sha256)?,
-            );
+        if let std::collections::btree_map::Entry::Vacant(e) = sources.entry(key) {
+            e.insert(read_source(config, &hit.root_key, &hit.path, &hit.source_sha256)?);
         }
         if source_excerpt(&sources[&key], hit.line_start, hit.line_end)? != hit.body {
             return Err(Error::new(

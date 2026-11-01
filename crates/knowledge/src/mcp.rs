@@ -75,15 +75,14 @@ pub fn checkpoint() -> Result<()> {
 /// Register each request-owned reader so cancellation can interrupt SQLite work.
 pub(crate) fn observe_connection(connection: &rusqlite::Connection) {
     CURRENT.with(|current| {
-        if let Some(operation) = current.borrow().as_ref() {
-            if let Ok(mut connections) = operation.connections.lock() {
+        if let Some(operation) = current.borrow().as_ref()
+            && let Ok(mut connections) = operation.connections.lock() {
                 connections.push(connection.get_interrupt_handle());
                 // Close the race with cancellation immediately before registration.
                 if operation.stopped.load(Ordering::Acquire) != 0 {
                     connection.get_interrupt_handle().interrupt();
                 }
             }
-        }
     });
 }
 struct WorkerScope(Option<Arc<Operation>>);
@@ -326,8 +325,10 @@ impl ServerHandler for Server {
         {
             return Err(invalid("this tool list has no continuation cursor"));
         }
-        let mut result = ListToolsResult::default();
-        result.tools = self.tools.clone();
+        let result = ListToolsResult {
+            tools: self.tools.clone(),
+            ..Default::default()
+        };
         let id_bytes = serde_json::to_vec(&context.id)
             .map_err(|_| invalid("invalid request identifier"))?
             .len();

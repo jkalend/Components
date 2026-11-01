@@ -291,11 +291,10 @@ fn parse_inner(
                 }
             }
             Event::End(tag) => {
-                if matches!(tag, TagEnd::Heading(_)) {
-                    if let Some(heading) = current_heading.take() {
+                if matches!(tag, TagEnd::Heading(_))
+                    && let Some(heading) = current_heading.take() {
                         headings.push(heading);
                     }
-                }
                 depth = depth.saturating_sub(1);
                 if depth == 0 {
                     block_boundaries.push(lines.after(end));
@@ -729,6 +728,7 @@ fn valid_date(value: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::field_reassign_with_default)]
     use super::*;
     use crate::config::Root;
     use std::collections::BTreeMap;
