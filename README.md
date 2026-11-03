@@ -137,3 +137,9 @@ Two packages were extracted from working product code on 2026-11-01. Both keep t
 | Add a manifest for a package | Spec exists with a defined first demo; the package builds and tests standalone |
 | Release a member | Contract tests pass plus at least one consumer integration test |
 | Split a member into its own repository | Standalone product surface with an independent release cadence, or build-time isolation need |
+
+## License
+
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).
+
+Copyright 2026 jkalend. Third-party components retain their own licenses.
