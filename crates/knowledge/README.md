@@ -4,10 +4,10 @@ Markdown retrieval, cited evidence packs and an opt-in grounded-answer path. Can
 
 | Fact | Value |
 |---|---|
-| Version | `0.1.0`, `publish = false` |
+| Version | `0.1.0`, tagged `knowledge-v0.1.0`; `publish = false` (crates.io `knowledge` is taken) |
 | Extracted from | Scribe's `kb` crate, 2026-11-01 |
 | Crate | [`src/lib.rs`](src/lib.rs); modules `db`, `ingest`, `retrieve`, `context`, `graph`, `mcp`, plus `full`-gated `answer`, `embed`, `verify` |
-| First consumer | Scribe (`kb` CLI), path dependency |
+| First consumer | Scribe (`kb` CLI), pinned Git tag `knowledge-v0.1.0` |
 
 ## Profiles
 
@@ -27,3 +27,13 @@ cargo test -p knowledge --features full
 ```
 
 `tests/fixtures/` carries the engine-side fixtures (`canonical/`, `graph-errors/`, `research/`, `audit/`). Scribe keeps its own copies for product tests; they are test data, not duplicated logic.
+
+## Consumption
+
+Consumers pin the Git tag; a path dependency is for co-development only.
+
+```toml
+knowledge = { git = "https://github.com/jkalend/Components", tag = "knowledge-v0.1.0" }
+```
+
+A path source is not content-pinned by the consumer's `Cargo.lock`, so record the `Components` revision when a build follows a local checkout instead of the tag.

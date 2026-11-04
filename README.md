@@ -125,7 +125,7 @@ Two packages were extracted from working product code on 2026-11-01. Both keep t
 | [`knowledge`](crates/knowledge/) | Scribe's `kb` engine: storage, ingest, retrieval, context packs, graph, MCP server | CLI (`src/main.rs`), product evaluation harness (`src/eval.rs`, `src/answer_eval.rs`), fixtures and config documents |
 
 - PeerVault consumes `bailiff` by path dependency and passes `EvidenceInputs`, so the evidence records the product's own build inputs and the crate version.
-- Scribe's `kb` crate depends on `knowledge` and re-exports it; commands, configuration and MCP behaviour are unchanged.
+- Scribe's `kb` crate consumes the pinned `knowledge-v0.1.0` tag and re-exports it; commands, configuration and MCP behaviour are unchanged.
 - Fixture data exists in both repositories where product and package tests need it (`v1-a.json`/`v1-b.json` in PeerVault, `canonical/`/`graph-errors/` in Scribe and `knowledge`). It is test data, not duplicated logic.
 - ModGrid holds no component code: its `internal/` packages are product internals with no component specification.
 
