@@ -12,7 +12,7 @@ Markdown retrieval, cited evidence packs and an opt-in grounded-answer path. Can
 ## Profiles
 
 - **light (default):** SQLite FTS5/BM25, no models, no network. `cargo test -p knowledge` covers this path.
-- **full:** embeddings, hybrid retrieval, verified answers. Enable with `cargo test -p knowledge --features full`; it requires configured providers at runtime and is not an answer-quality claim.
+- **full:** embeddings, hybrid retrieval, verified answers. Enable with `cargo test -p knowledge --features full`; the package tests do not call a provider, and consumer integration tests (Scribe) exercise the full retrieval/answer path. It requires configured providers at runtime and is not an answer-quality claim.
 
 ## What stays in the product
 
